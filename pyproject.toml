@@ -1,6 +1,6 @@
 [project]
 name = "fragmented-keys"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fragmented Key Management and Invalidation Library for use with Redis"
 readme = "README.md"
 license = "MIT"
@@ -24,6 +24,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/noizu-labs/fragmented-keys-py"
+Documentation = "https://fragmented-keys-py.readthedocs.io/en/latest/"
 Repository = "https://github.com/noizu-labs/fragmented-keys-py"
 Issues = "https://github.com/noizu-labs/fragmented-keys-py/issues"
 
