@@ -1,0 +1,23 @@
+[project]
+name = "fragmented-keys"
+version = "0.1.0"
+description = "Fragmented Key Management and Invalidation Library for use with Redis"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Keith Brings", email = "keith.brings@noizu.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "redis>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.0,<0.11.0"]
+build-backend = "uv_build"
