@@ -10,3 +10,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Sphinx build output
+docs/_build/
