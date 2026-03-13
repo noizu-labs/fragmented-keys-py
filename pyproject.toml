@@ -8,9 +8,24 @@ authors = [
     { name = "Keith Brings", email = "keith.brings@noizu.com" }
 ]
 requires-python = ">=3.13"
+keywords = ["cache", "redis", "invalidation", "fragmented-keys", "versioned-keys"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
 dependencies = [
     "redis>=5.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/noizu-labs/fragmented-keys-py"
+Repository = "https://github.com/noizu-labs/fragmented-keys-py"
+Issues = "https://github.com/noizu-labs/fragmented-keys-py/issues"
 
 [project.optional-dependencies]
 dev = [
