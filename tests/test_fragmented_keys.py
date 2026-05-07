@@ -257,6 +257,38 @@ class TestKeyRing:
         key_obj = ring.get_key_obj("Mixed", ["42", "chicago"])
         assert isinstance(key_obj.get_key_str(), str)
 
+    def test_list_defined_keys_empty(self, memory_handler):
+        ring = FragmentedKeyRing(
+            cache_handlers={"memory": memory_handler},
+            default_cache_handler="memory",
+            default_prefix="Test",
+        )
+        assert ring.list_defined_keys() == {}
+
+    def test_list_defined_keys_returns_definitions(self, memory_handler):
+        ring = FragmentedKeyRing(
+            cache_handlers={"memory": memory_handler},
+            default_cache_handler="memory",
+            default_prefix="Test",
+        )
+        ring.define_key("Users", ["universe", "planet"])
+        ring.define_key("Profile", ["user"])
+        keys = ring.list_defined_keys()
+        assert set(keys.keys()) == {"Users", "Profile"}
+        assert keys["Users"]["params"] == ["universe", "planet"]
+        assert keys["Profile"]["params"] == ["user"]
+
+    def test_list_defined_keys_is_copy(self, memory_handler):
+        ring = FragmentedKeyRing(
+            cache_handlers={"memory": memory_handler},
+            default_cache_handler="memory",
+            default_prefix="Test",
+        )
+        ring.define_key("X", ["a"])
+        keys = ring.list_defined_keys()
+        keys["X"] = "tampered"
+        assert ring.list_defined_keys()["X"] != "tampered"
+
     def test_keyring_wrong_arg_count_raises(self, memory_handler):
         ring = FragmentedKeyRing(
             cache_handlers={"memory": memory_handler},

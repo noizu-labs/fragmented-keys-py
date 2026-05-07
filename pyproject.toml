@@ -1,6 +1,6 @@
 [project]
 name = "fragmented-keys"
-version = "0.1.1"
+version = "0.1.4"
 description = "Fragmented Key Management and Invalidation Library for use with Redis"
 readme = "README.md"
 license = "MIT"
