@@ -6,13 +6,57 @@ A Python port of [noizu-labs/fragmented-keys](https://github.com/noizu-labs/frag
 
 ## Overview
 
-Fragmented Keys enable efficient cache invalidation by composing cache keys from multiple independently versioned **tags**. Instead of deleting cached entries individually, you increment a tag's version — all keys that depend on that tag automatically resolve to a new cache key, leaving the old entries to expire naturally.
+Fragmented Keys provide a straightforward way to manage and invalidate composite cache keys.
+
+The library persists tag-instance versioning information in Redis (or another backend of your choice). When constructing composite/fragmented keys, these tags and their current versions are combined to generate the final cache key.
 
 ```
 Cache Key = md5( base_key + tag1:version1 + tag2:version2 + ... )
 ```
 
-When any tag version changes, the resulting key changes, producing a cache miss and triggering a fresh data fetch.
+Instead of deleting cached entries individually, you increment a tag's version — all keys that depend on that tag automatically resolve to a new cache key, leaving the old entries to expire naturally.
+
+### How Invalidation Works
+
+Say you have cached data tied to both a global greeting template and a per-user username. You can selectively invalidate only items linked to a specific user:
+
+```python
+user_tag = StandardTag("User.Username", user_id)
+user_tag.increment()
+```
+
+Behind the scenes, only the targeted user's cached data is invalidated — everything else remains valid:
+
+```mermaid
+graph TD
+    A[AllKeys] --> B["✅ Global.Greeting"]
+    B --> C["✅ Other User Cached Greeting"]
+    B --> D["❌ Targeted User"]
+
+    style D fill:#f96,stroke:#c00,color:#000
+    style B fill:#9f9,stroke:#090,color:#000
+    style C fill:#9f9,stroke:#090,color:#000
+```
+
+Or you could invalidate *all* keys that depend on `Global.Greeting` — but make sure your database is ready for the traffic spike:
+
+```python
+greeting_tag = StandardTag("Global.Greeting", "global")
+greeting_tag.increment()
+```
+
+```mermaid
+graph TD
+    A[AllKeys] --> B["❌ Global.Greeting"]
+    B --> C["❌ Other User Cached Greeting"]
+    B --> D["❌ Targeted User"]
+
+    style B fill:#f96,stroke:#c00,color:#000
+    style C fill:#f96,stroke:#c00,color:#000
+    style D fill:#f96,stroke:#c00,color:#000
+```
+
+This tree-structured invalidation is the core power of fragmented keys: fine-grained control over which cached data expires, without needing to track individual cache entries.
 
 ## Installation
 
@@ -59,6 +103,8 @@ user_tag.increment()
 
 ## Tag Types
 
+Tags represent a logical grouping that you would, under certain circumstances, want to invalidate associated cached data for. A `User:{id}` pair, a `Site:{siteId}`, etc. The library appends `@version` fields to tag-instance pairs so that when you want to invalidate a large swath of related items, you don't need to send dozens of delete requests to your cache — you make a single `tag.increment()` call and any keys using that tag-instance produce new cache keys automatically.
+
 ### StandardTag
 
 Version is stored in the cache backend and can be incremented. Each increment changes the version by `+0.1`, invalidating all dependent keys.
@@ -72,7 +118,7 @@ tag.reset_tag_version() # Resets to a new time-based value
 
 ### ConstantTag
 
-Version is fixed at construction time. Mutations are no-ops. Useful for incorporating static dimensions into composite keys.
+Version is fixed at construction time. Mutations are no-ops. Useful for incorporating non-versioned tag-instance details into large composite keys (e.g., an API version or schema version that rarely changes).
 
 ```python
 tag = ConstantTag("ApiVersion", "v2", version=2.0)
