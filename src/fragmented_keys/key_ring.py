@@ -160,3 +160,9 @@ class FragmentedKeyRing:
             return factory
 
         raise AttributeError(f"{type(self).__name__!r} has no attribute {name!r}")
+
+    # -- introspection ---------------------------------------------------------
+
+    def list_defined_keys(self) -> dict[str, dict]:
+        """Return all defined key templates."""
+        return dict(self._key_definitions)
