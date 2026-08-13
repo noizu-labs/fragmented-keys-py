@@ -30,11 +30,16 @@ class StandardKey:
 
     # -- bulk version fetching -------------------------------------------------
 
-    def _gather_group_versions(self) -> None:
+    def _gather_group_versions(self) -> dict[str, float]:
         """Fetch all tag versions in bulk, grouped by cache handler.
 
         Tags sharing the same handler are fetched with a single
         ``get_multi`` call rather than N individual requests.
+
+        Returns a ``{tag_name: version}`` map of the freshly-fetched
+        versions. The tag objects themselves are **not** mutated, so each
+        call reflects the current cache state — an external increment is
+        always picked up on the next ``get_key_str`` of the same key.
         """
         groups: dict[str, list[BaseTag]] = {}
         for tag in self._tags:
@@ -42,14 +47,16 @@ class StandardKey:
             if tag.delegate_cache_query(group):
                 groups.setdefault(group, []).append(tag)
 
-        for group_name, group_tags in groups.items():
+        versions: dict[str, float] = {}
+        for group_tags in groups.values():
             keys = [t.get_tag_name() for t in group_tags]
             handler = group_tags[0].get_cache_handler()
             results = handler.get_multi(keys)
             for tag in group_tags:
                 cached = results.get(tag.get_tag_name())
                 if cached is not None:
-                    tag.set_tag_version(float(cached))
+                    versions[tag.get_tag_name()] = float(cached)
+        return versions
 
     # -- key generation --------------------------------------------------------
 
@@ -60,11 +67,12 @@ class StandardKey:
         hex digest suitable for use as a cache key.  Pass ``False`` to
         get the raw string for debugging.
         """
-        self._gather_group_versions()
+        versions = self._gather_group_versions()
 
         parts = [f"{self._key}_{self._group_id}"]
         for tag in self._tags:
-            parts.append(f":t{tag.get_tag_name()}:v{tag.get_tag_version()}")
+            version = versions.get(tag.get_tag_name(), tag.get_tag_version())
+            parts.append(f":t{tag.get_tag_name()}:v{version}")
 
         raw = "".join(parts)
         if not hash:

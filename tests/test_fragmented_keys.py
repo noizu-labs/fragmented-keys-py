@@ -124,6 +124,20 @@ class TestStandardKey:
         k2 = key2.get_key_str()
         assert k1 != k2
 
+    def test_rerender_reflects_external_invalidation(self, memory_handler):
+        # Contract: get_key_str() always reflects current cache state.
+        # Rendering a key, then having an independent tag object invalidate
+        # the same identity, must change the next render of the SAME key
+        # object (guards against memoizing fetched versions onto the tags).
+        tag = StandardTag("User", "42")
+        key = StandardKey("Profile", [tag])
+        k1 = key.get_key_str()
+
+        StandardTag("User", "42").increment()  # independent object, shared cache
+
+        k2 = key.get_key_str()
+        assert k1 != k2
+
     def test_key_with_multiple_tags(self, memory_handler):
         tag_user = StandardTag("User", "1")
         tag_city = StandardTag("City", "chicago")
