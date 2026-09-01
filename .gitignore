@@ -13,3 +13,7 @@ wheels/
 
 # Sphinx build output
 docs/_build/
+
+# Work journal — local only, not tracked
+journal/TODAY*
+journal/TOMORROW*
